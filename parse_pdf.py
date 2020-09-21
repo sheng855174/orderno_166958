@@ -3,6 +3,8 @@ from pdfminer.converter import HTMLConverter,TextConverter,XMLConverter
 from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
 import io
+import PyPDF2
+import re
 
 def convert(case,fname, pages=None):
     if not pages: pagenums = set();
@@ -14,9 +16,6 @@ def convert(case,fname, pages=None):
     if case == 'text' :
         output = io.StringIO()
         converter = TextConverter(manager, output, codec=codec, laparams=LAParams())    
-    if case == 'HTML' :
-        output = io.BytesIO()
-        converter = HTMLConverter(manager, output, codec=codec, laparams=LAParams())
 
     interpreter = PDFPageInterpreter(manager, converter)  
     infile = open(fname, 'rb')
@@ -33,16 +32,46 @@ def convert(case,fname, pages=None):
 filePDF  = '崙子段1588-2地號謄本.pdf'     # input
 fileHTML = 'myHTML.html'   # output
 fileTXT  = 'myTXT.txt'     # output
+file = open(filePDF, 'rb')
+fileReader = PyPDF2.PdfFileReader(file)
 
-case ="text"
-
-if case == 'HTML' :
-    convertedPDF = convert('HTML', filePDF, pages=[0,1])
-    fileConverted = open(fileHTML,"wb")
-if case == 'text' :
-    convertedPDF = convert('text', filePDF, pages=[0,1])
-    fileConverted = open(fileTXT,"w",encoding="utf-8")
+pages = [i for i in range(fileReader.numPages)]
+convertedPDF = convert('text', filePDF, pages=pages)
+fileConverted = open(fileTXT,"w",encoding="utf-8")
 
 fileConverted.write(convertedPDF)
 fileConverted.close()
-#print(convertedPDF)
+file.close()
+
+切割關鍵字列表 = re.findall("（[0-9][0-9][0-9][0-9]）", convertedPDF)
+關鍵字索引列表 = []
+
+for 切割關鍵字 in 切割關鍵字列表 :
+    關鍵字索引列表.append(convertedPDF.find(切割關鍵字));
+關鍵字索引列表.append(convertedPDF.find("〈 本謄本列㊞完畢 〉"));
+
+start = 0
+end = 1
+土地所有權列表 = []
+for 關鍵字索引 in range(len(關鍵字索引列表)-1):
+    print(convertedPDF[關鍵字索引列表[start]:關鍵字索引列表[end]])
+    土地所有權列表.append(convertedPDF[關鍵字索引列表[start]:關鍵字索引列表[end]])
+    start = start + 1
+    end = end + 1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
